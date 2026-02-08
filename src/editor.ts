@@ -29,7 +29,6 @@ const SCHEMA = [
       },
     },
   },
-  { name: 'icon_color', selector: { text: {} } },
   {
     type: 'grid',
     name: '',
@@ -47,6 +46,23 @@ const SCHEMA = [
     ],
   },
   { name: 'animated', selector: { boolean: {} } },
+];
+
+const ICON_COLORS = [
+  { value: '', label: 'Default' },
+  { value: 'var(--primary-color)', label: 'Primary' },
+  { value: 'var(--accent-color)', label: 'Accent' },
+  { value: 'var(--primary-text-color)', label: 'Primary Text' },
+  { value: 'var(--secondary-text-color)', label: 'Secondary Text' },
+  { value: 'var(--state-icon-color)', label: 'State Icon' },
+  { value: '#f44336', label: 'Red' },
+  { value: '#ff9800', label: 'Orange' },
+  { value: '#ffc107', label: 'Amber' },
+  { value: '#ffeb3b', label: 'Yellow' },
+  { value: '#4caf50', label: 'Green' },
+  { value: '#2196f3', label: 'Blue' },
+  { value: '#9c27b0', label: 'Purple' },
+  { value: '#607d8b', label: 'Grey' },
 ];
 
 @customElement('linear-gauge-card-editor')
@@ -82,6 +98,27 @@ export class LinearGaugeCardEditor extends LitElement {
           .computeLabel=${this._computeLabel}
           @value-changed=${this._formChanged}
         ></ha-form>
+
+        <ha-select
+          .label=${'Icon Color'}
+          .value=${this._config.icon_color || ''}
+          @selected=${this._iconColorChanged}
+          @closed=${(e: Event) => e.stopPropagation()}
+          fixedMenuPosition
+        >
+          ${ICON_COLORS.map(
+            (opt) => html`
+              <ha-list-item .value=${opt.value} graphic="icon">
+                <span
+                  slot="graphic"
+                  class="color-circle ${opt.value ? '' : 'color-circle-none'}"
+                  style=${opt.value ? `background-color: ${opt.value}` : ''}
+                ></span>
+                ${opt.label}
+              </ha-list-item>
+            `,
+          )}
+        </ha-select>
 
         <div class="colors-section">
           <div class="section-header">
@@ -123,7 +160,6 @@ export class LinearGaugeCardEditor extends LitElement {
       max: 'Maximum',
       unit: 'Unit',
       zero_indicator: 'Zero Indicator',
-      icon_color: 'Icon Color',
       sharp_zero_edge: 'Sharp Zero Edge',
       animated: 'Animated',
       show_value: 'Show Value',
@@ -131,6 +167,15 @@ export class LinearGaugeCardEditor extends LitElement {
       show_icon: 'Show Icon',
     };
     return labels[schema.name] || schema.name;
+  }
+
+  private _iconColorChanged(ev: CustomEvent): void {
+    ev.stopPropagation();
+    const value = (ev.target as any).value;
+    if (value === (this._config.icon_color || '')) return;
+    const config = { ...this._config, icon_color: value || undefined };
+    this._config = config;
+    this._dispatch(config);
   }
 
   private _formChanged(ev: CustomEvent): void {
@@ -214,6 +259,25 @@ export class LinearGaugeCardEditor extends LitElement {
     }
     .color-row ha-textfield {
       flex: 1;
+    }
+    ha-select {
+      width: 100%;
+    }
+    .color-circle {
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid var(--divider-color);
+    }
+    .color-circle-none {
+      background: linear-gradient(
+        135deg,
+        transparent 40%,
+        var(--divider-color) 40%,
+        var(--divider-color) 60%,
+        transparent 60%
+      );
     }
   `;
 }
