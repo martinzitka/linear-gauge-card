@@ -55,6 +55,9 @@ The card receives configuration via Home Assistant's Lovelace card config system
 | `sharp_zero_edge` | boolean | Flatten the fill's edge at zero (default: false) |
 | `animated` | boolean | Animate value changes (default: true) |
 | `icon_color` | string | CSS color for the entity icon (default: HA theme color) |
+| `layout` | string | Layout mode: 'default' or 'inline' |
+| `label_width` | number | Max label width in pixels (inline mode) |
+| `value_width` | number | Min value width in pixels (inline mode) |
 
 
 ## Development Commands

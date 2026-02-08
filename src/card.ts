@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { HomeAssistant, LinearGaugeCardConfig, ColorThreshold } from './types';
+import type { HomeAssistant, LinearGaugeCardConfig, ColorThreshold, HassEntity } from './types';
 
 @customElement('linear-gauge-card')
 export class LinearGaugeCard extends LitElement {
@@ -37,12 +37,13 @@ export class LinearGaugeCard extends LitElement {
       zero_indicator: 'none',
       sharp_zero_edge: false,
       animated: true,
+      layout: 'default',
       ...config,
     };
   }
 
   public getCardSize(): number {
-    return 2;
+    return this._config?.layout === 'inline' ? 1 : 2;
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
@@ -125,28 +126,43 @@ export class LinearGaugeCard extends LitElement {
       `;
     }
 
+    const zeroLineHtml =
+      showZero && this._config.zero_indicator === 'line'
+        ? html`<div class="zero-line" style="left: ${zeroPercent}%;"></div>`
+        : nothing;
+
+    if (this._config.layout === 'inline') {
+      return html`
+        <ha-card @click=${this._handleClick}>
+          <div class="card-content inline">
+            <div class="inline-container">
+              ${this._renderIcon(entity)}
+              ${this._renderLabel(name)}
+              <div class="gauge">
+                <div class="track">
+                  ${fillHtml}
+                  ${zeroLineHtml}
+                </div>
+              </div>
+              ${this._renderValue(isUnavailable, stateValue, numericValue, unit)}
+            </div>
+          </div>
+        </ha-card>
+      `;
+    }
+
     return html`
       <ha-card @click=${this._handleClick}>
         <div class="card-content">
           <div class="header">
-            ${this._config.show_icon
-              ? html`<ha-state-icon
-                  .hass=${this.hass}
-                  .stateObj=${entity}
-                  style=${this._config.icon_color ? `color: ${this._config.icon_color}` : ''}
-                ></ha-state-icon>`
-              : nothing}
-            ${this._config.show_label ? html`<span class="name">${name}</span>` : nothing}
-            ${this._config.show_value
-              ? html`<span class="value">${isUnavailable ? stateValue : numericValue}${unit ? html`<span class="unit">${unit}</span>` : nothing}</span>`
-              : nothing}
+            ${this._renderIcon(entity)}
+            ${this._renderLabel(name)}
+            ${this._renderValue(isUnavailable, stateValue, numericValue, unit)}
           </div>
           <div class="gauge">
             <div class="track">
               ${fillHtml}
-              ${showZero && this._config.zero_indicator === 'line'
-                ? html`<div class="zero-line" style="left: ${zeroPercent}%;"></div>`
-                : nothing}
+              ${zeroLineHtml}
             </div>
             ${showZero && this._config.zero_indicator === 'arrow'
               ? html`<div class="zero-arrow" style="left: ${zeroPercent}%;"></div>`
@@ -155,6 +171,42 @@ export class LinearGaugeCard extends LitElement {
         </div>
       </ha-card>
     `;
+  }
+
+  private _renderIcon(entity: HassEntity) {
+    if (!this._config.show_icon) return nothing;
+    return html`<ha-state-icon
+      .hass=${this.hass}
+      .stateObj=${entity}
+      style=${this._config.icon_color ? `color: ${this._config.icon_color}` : ''}
+    ></ha-state-icon>`;
+  }
+
+  private _renderLabel(name: string) {
+    if (!this._config.show_label) return nothing;
+    const maxWidth =
+      this._config.layout === 'inline' && this._config.label_width
+        ? `max-width: ${this._config.label_width}px`
+        : '';
+    return html`<span class="name" style=${maxWidth}>${name}</span>`;
+  }
+
+  private _renderValue(
+    isUnavailable: boolean,
+    stateValue: string,
+    numericValue: number | null,
+    unit: string,
+  ) {
+    if (!this._config.show_value) return nothing;
+    const minWidth =
+      this._config.layout === 'inline' && this._config.value_width
+        ? `min-width: ${this._config.value_width}px`
+        : '';
+    return html`<span class="value" style=${minWidth}
+      >${isUnavailable ? stateValue : numericValue}${unit
+        ? html`<span class="unit">${unit}</span>`
+        : nothing}</span
+    >`;
   }
 
   private _computeFillBorderRadius(
@@ -306,6 +358,52 @@ export class LinearGaugeCard extends LitElement {
       border-bottom: 6px solid var(--secondary-text-color);
       transform: translateX(-5px);
       margin-top: 2px;
+    }
+    /* Inline layout */
+    .card-content.inline {
+      padding: 8px 16px;
+    }
+    .inline-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .inline-container ha-state-icon {
+      flex-shrink: 0;
+      color: var(--primary-text-color);
+      --mdc-icon-size: 24px;
+    }
+    .inline-container .name {
+      flex-shrink: 1;
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary-text-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .inline-container .gauge {
+      flex: 1;
+      min-width: 0;
+    }
+    .inline-container .track {
+      height: 10px;
+      border-radius: 5px;
+    }
+    .inline-container .value {
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary-text-color);
+      white-space: nowrap;
+      text-align: right;
+    }
+    .inline-container .unit {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--secondary-text-color);
+      margin-left: 2px;
     }
   `;
 }

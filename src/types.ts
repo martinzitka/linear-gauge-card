@@ -4,6 +4,7 @@ export interface ColorThreshold {
 }
 
 export type ZeroIndicator = 'none' | 'line' | 'arrow';
+export type Layout = 'default' | 'inline';
 
 export interface LinearGaugeCardConfig {
   type: string;
@@ -20,6 +21,9 @@ export interface LinearGaugeCardConfig {
   sharp_zero_edge?: boolean;
   animated?: boolean;
   icon_color?: string;
+  layout?: Layout;
+  label_width?: number;
+  value_width?: number;
 }
 
 // Home Assistant types not available via npm

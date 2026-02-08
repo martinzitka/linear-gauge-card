@@ -30,6 +30,25 @@ const SCHEMA = [
     },
   },
   {
+    name: 'layout',
+    selector: {
+      select: {
+        options: [
+          { value: 'default', label: 'Default' },
+          { value: 'inline', label: 'Inline' },
+        ],
+      },
+    },
+  },
+  {
+    type: 'grid',
+    name: '',
+    schema: [
+      { name: 'label_width', selector: { number: { mode: 'box', min: 20, max: 500, unit_of_measurement: 'px' } } },
+      { name: 'value_width', selector: { number: { mode: 'box', min: 20, max: 500, unit_of_measurement: 'px' } } },
+    ],
+  },
+  {
     type: 'grid',
     name: '',
     schema: [
@@ -86,6 +105,7 @@ export class LinearGaugeCardEditor extends LitElement {
       zero_indicator: 'none',
       sharp_zero_edge: false,
       animated: true,
+      layout: 'default',
       ...this._config,
     };
 
@@ -162,6 +182,9 @@ export class LinearGaugeCardEditor extends LitElement {
       zero_indicator: 'Zero Indicator',
       sharp_zero_edge: 'Sharp Zero Edge',
       animated: 'Animated',
+      layout: 'Layout',
+      label_width: 'Label Width',
+      value_width: 'Value Width',
       show_value: 'Show Value',
       show_label: 'Show Label',
       show_icon: 'Show Icon',
